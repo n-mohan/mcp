@@ -1,0 +1,135 @@
+classes:
+- system.linux.system.repo.saltstack.xenial
+- system.maas.region.single
+- cluster.baremetal-mcp-ocata-odl-ha.infra
+parameters:
+  _param:
+    dhcp_interface: enp1s0
+    primary_interface: enp2s0
+    pxe_interface: enp3s0
+    external_interface: enp4s0
+    interface_mtu: 1500
+    # MaaS has issues using MTU > 1500 for PXE interface
+    pxe_interface_mtu: 1500
+    linux_system_codename: xenial
+    maas_admin_username: opnfv
+    maas_admin_password: opnfv_secret
+    maas_db_password: opnfv_secret
+    dns_server01: 8.8.4.4
+    single_address: ${_param:infra_maas_node01_deploy_address}
+  maas:
+    region:
+      salt_master_ip: ${_param:infra_config_deploy_address}
+      domain: ${_param:cluster_domain}
+      maas_config:
+        commissioning_distro_series: 'xenial'
+        default_distro_series: 'xenial'
+        default_osystem: 'ubuntu'
+        default_storage_layout: 'lvm'
+        disk_erase_with_secure_erase: false
+        dnssec_validation: 'no'
+        enable_third_party_drivers: true
+        network_discovery: 'enabled'
+        default_min_hwe_kernel: 'hwe-16.04'
+      subnets:
+        # TODO: parametrize address root (192.168.11), dhcp start/end?
+        192.168.11.0/24:
+          cidr: 192.168.11.0/24
+          gateway_ip: ${_param:single_address}
+          iprange:
+            start: 192.168.11.5
+            end: 192.168.11.250
+            type: dynamic
+          vlans:
+            untagged:
+              vid: 0
+              dhcp_on: true
+              primary_rack: ${_param:infra_maas_node01_hostname}
+      machines:
+        kvm01:
+          interface:
+            mac: "00:0f:b7:11:18:4b"
+          power_parameters:
+            power_address: "10.164.6.4"
+            power_password: "admin"
+            power_type: ipmi
+            power_user: "admin"
+          architecture: 'arm64/generic'
+          distro_series: xenial
+          hwe_kernel: hwe-16.04
+        kvm02:
+          interface:
+            mac: "00:0f:b7:11:20:2b"
+          power_parameters:
+            power_address: "10.164.6.9"
+            power_password: "admin"
+            power_type: ipmi
+            power_user: "admin"
+          architecture: 'arm64/generic'
+          distro_series: xenial
+          hwe_kernel: hwe-16.04
+        kvm03:
+          interface:
+            mac: "00:0f:b7:11:18:dd"
+          power_parameters:
+            power_address: "10.164.6.6"
+            power_password: "admin"
+            power_type: ipmi
+            power_user: "admin"
+          architecture: 'arm64/generic'
+          distro_series: xenial
+          hwe_kernel: hwe-16.04
+        cmp001:
+          interface:
+            mac: "00:0f:b7:11:18:3c"
+          power_parameters:
+            power_address: "10.164.6.2"
+            power_password: "admin"
+            power_type: ipmi
+            power_user: "admin"
+          architecture: 'arm64/generic'
+          distro_series: xenial
+          hwe_kernel: hwe-16.04
+        cmp002:
+          interface:
+            mac: "00:0f:b7:11:18:41"
+          power_parameters:
+            power_address: "10.164.6.3"
+            power_password: "admin"
+            power_type: ipmi
+            power_user: "admin"
+          architecture: 'arm64/generic'
+          distro_series: xenial
+          hwe_kernel: hwe-16.04
+  linux:
+    network:
+      interface:
+        dhcp_interface:
+          enabled: true
+          name: ${_param:dhcp_interface}
+          type: eth
+          proto: dhcp
+        primary_interface:
+          enabled: true
+          name: ${_param:primary_interface}
+          mtu: ${_param:interface_mtu}
+          proto: static
+          address: ${_param:infra_maas_node01_address}
+          netmask: 255.255.255.0
+          type: eth
+        pxe_interface:
+          enabled: true
+          name: ${_param:pxe_interface}
+          mtu: ${_param:pxe_interface_mtu}
+          proto: static
+          address: ${_param:single_address}
+          netmask: 255.255.255.0
+          type: eth
+        external_interface:
+          enabled: true
+          name: ${_param:external_interface}
+          mtu: ${_param:interface_mtu}
+          proto: static
+          address: ${_param:infra_maas_node01_external_address}
+          netmask: 255.255.0.0
+          type: eth
